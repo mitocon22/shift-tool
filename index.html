@@ -261,36 +261,12 @@
       word-break: break-all; max-height: 200px; overflow-y: auto;
       border: 1.5px solid #e5e5ea; margin-bottom: 14px;
     }
-    .copy-btn {
+    .ics-btn {
       width: 100%; padding: 15px; background: #007aff; color: white;
       border: none; border-radius: 13px; font-size: 16px; font-weight: 700;
       cursor: pointer; margin-bottom: 10px; transition: all 0.18s;
     }
-    .copy-btn:hover { background: #0062cc; }
-    .copy-btn.copied { background: #34c759; }
-
-    /* AIリンクボタン */
-    .ai-links { display: none; gap: 9px; margin-bottom: 10px; }
-    .ai-links.visible { display: flex; }
-    .ai-link-btn {
-      flex: 1; padding: 11px 8px; border-radius: 11px; border: none;
-      font-size: 13px; font-weight: 700; cursor: pointer;
-      text-decoration: none; display: flex; align-items: center;
-      justify-content: center; gap: 5px; transition: all 0.18s;
-    }
-    .ai-link-gemini { background: #e8f5e9; color: #1a7340; }
-    .ai-link-gemini:hover { background: #c8e6c9; }
-    .ai-link-claude { background: #fff3e0; color: #e65100; }
-    .ai-link-claude:hover { background: #ffe0b2; }
-
-    .ics-btn {
-      width: 100%; padding: 13px; background: #e8f0fe; color: #1a56b0;
-      border: none; border-radius: 13px; font-size: 15px; font-weight: 700;
-      cursor: pointer; margin-bottom: 10px; transition: all 0.18s;
-      display: none;
-    }
-    .ics-btn.visible { display: block; }
-    .ics-btn:hover { background: #c7d9fc; }
+    .ics-btn:hover { background: #0062cc; }
 
     .reset-btn {
       background: #f2f2f7; color: #636366; border: none;
@@ -430,16 +406,11 @@
   <!-- STEP 3: 完了 -->
   <div class="page" id="page3">
     <div class="done-card">
-      <div class="done-icon">📋</div>
-      <div class="done-title">確認してコピー！</div>
-      <div class="done-sub">内容を確認して、ボタンを押してコピーしてください。<br>Claudeのチャットに貼り付けるだけで登録できます。</div>
+      <div class="done-icon">📅</div>
+      <div class="done-title">確認してカレンダーに追加！</div>
+      <div class="done-sub">内容を確認して、ボタンを押してください。<br>iPhoneのカレンダーに追加できます。</div>
       <div class="copy-box" id="finalText"></div>
-      <button class="copy-btn" id="copyBtn" onclick="doCopy()">📋 コピーする</button>
-      <button class="ics-btn" id="icsBtn" onclick="downloadICS()">📅 カレンダーに追加（.ics）</button>
-      <div class="ai-links" id="aiLinks">
-        <button class="ai-link-btn ai-link-gemini" onclick="openAI('https://gemini.google.com', 'gemini://')">✨ Geminiに貼り付ける</button>
-        <button class="ai-link-btn ai-link-claude" onclick="openAI('https://claude.ai', 'claude://')">🤖 Claudeに貼り付ける</button>
-      </div>
+      <button class="ics-btn" id="icsBtn" onclick="downloadICS()">📅 カレンダーに追加</button>
       <button class="reset-btn" onclick="resetAll()">🔄 新しいシフトを入力する</button>
     </div>
   </div>
@@ -791,7 +762,7 @@
   function finalize() {
     const WDAYS = ['日','月','火','水','木','金','土'];
     const fmtT = t => t.replace(/^0/, '');
-    let lines = ['以下のシフトをGoogleカレンダーに登録して：'];
+    let lines = [];
 
     finalizedShifts = [];
 
@@ -804,7 +775,7 @@
         if (!offDates.has(key)) workDates.push(key);
       }
       if (workDates.length === 0) { alert('仕事日が0日です。休みを減らしてください。'); return; }
-      lines.push(`\n${selectedPreset.name} ${fmtT(selectedPreset.start)}:00〜${fmtT(selectedPreset.end)}:00`);
+      lines.push(`${selectedPreset.name} ${fmtT(selectedPreset.start)}:00〜${fmtT(selectedPreset.end)}:00`);
       workDates.forEach(k => {
         const d = new Date(k + 'T00:00:00');
         lines.push(`・${d.getMonth()+1}月${d.getDate()}日（${WDAYS[d.getDay()]}）`);
@@ -816,7 +787,8 @@
       }
       if (cart.length === 0) return;
       cart.forEach(group => {
-        lines.push(`\n${group.name} ${fmtT(group.start)}:00〜${fmtT(group.end)}:00`);
+        if (lines.length) lines.push('');
+        lines.push(`${group.name} ${fmtT(group.start)}:00〜${fmtT(group.end)}:00`);
         group.dates.forEach(k => {
           const d = new Date(k + 'T00:00:00');
           lines.push(`・${d.getMonth()+1}月${d.getDate()}日（${WDAYS[d.getDay()]}）`);
@@ -831,11 +803,6 @@
     updateSteps(3);
     document.getElementById('stepsBar').style.display = 'none';
     document.getElementById('cartBar').classList.remove('visible');
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '📋 コピーする';
-    btn.classList.remove('copied');
-    document.getElementById('aiLinks').classList.remove('visible');
-    document.getElementById('icsBtn').classList.remove('visible');
   }
 
   function resetAll() {
@@ -849,29 +816,6 @@
     renderCart();
     showPage(1);
     updateSteps(1);
-  }
-
-  function doCopy() {
-    const text = document.getElementById('finalText').textContent;
-    const btn = document.getElementById('copyBtn');
-    const done = () => {
-      btn.textContent = '✅ コピーしました！';
-      btn.classList.add('copied');
-      document.getElementById('aiLinks').classList.add('visible');
-      document.getElementById('icsBtn').classList.add('visible');
-    };
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
-    } else { fallbackCopy(text, done); }
-  }
-
-  function fallbackCopy(text, callback) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    callback();
   }
 
   function goStep1() { showPage(1); updateSteps(1); }
@@ -961,22 +905,6 @@
     a.download = 'shift.ics';
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  function openAI(webUrl, appScheme) {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS && appScheme) {
-      let appOpened = false;
-      const onVisibility = () => { if (document.hidden) appOpened = true; };
-      document.addEventListener('visibilitychange', onVisibility);
-      window.location.href = appScheme;
-      setTimeout(() => {
-        document.removeEventListener('visibilitychange', onVisibility);
-        if (!appOpened) window.open(webUrl, '_blank');
-      }, 1000);
-    } else {
-      window.open(webUrl, '_blank');
-    }
   }
 
   function dismissBanner() {
