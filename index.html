@@ -366,8 +366,8 @@
   <div class="page active" id="page1">
     <!-- モード切替 -->
     <div class="mode-toggle">
-      <button class="mode-btn active" id="modeWork" onclick="setMode('work')">✏️ 仕事日を選ぶ</button>
-      <button class="mode-btn" id="modeOff" onclick="setMode('off')">🌴 休みを選ぶ</button>
+      <button class="mode-btn" id="modeWork" onclick="setMode('work')">✏️ 仕事日を選ぶ</button>
+      <button class="mode-btn active" id="modeOff" onclick="setMode('off')">🌴 休みを選ぶ</button>
     </div>
 
     <div class="card">
@@ -422,7 +422,7 @@
     </div>
     <div class="btn-row" id="step2Btns">
       <button class="btn btn-secondary" onclick="goStep1()">← 戻る</button>
-      <button class="btn btn-primary" id="addMoreBtn" onclick="addToCart()" disabled>＋ 追加して<br>別シフトも入力</button>
+      <button class="btn btn-primary" id="addMoreBtn" onclick="addToCart()" style="display:none" disabled>＋ 追加して<br>別シフトも入力</button>
       <button class="btn btn-green" id="finalBtn" onclick="finalize()" disabled>✓ まとめて<br>登録する</button>
     </div>
   </div>
@@ -455,15 +455,20 @@
   let selectedDates = new Set();
   let offDates = new Set();
   let cart = [];
-  let inputMode = 'work';
+  let inputMode = 'off';
   let calYear, calMonth;
   let finalizedShifts = [];
   let workDuration = 9;
   let editingPresetId = null;
   const today = new Date();
   today.setHours(0,0,0,0);
-  calYear = today.getFullYear();
-  calMonth = today.getMonth();
+  // カレンダーは次月から表示
+  function resetCalendarMonth() {
+    calYear = today.getFullYear();
+    calMonth = today.getMonth() + 1;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+  }
+  resetCalendarMonth();
 
   /* ---- プリセット管理 ---- */
   function loadPresets() {
@@ -836,6 +841,8 @@
   function resetAll() {
     cart = []; selectedDates = new Set(); offDates = new Set();
     selectedPreset = null;
+    resetCalendarMonth();
+    setMode('off');
     renderPresets();
     document.getElementById('nextBtn1').disabled = true;
     document.getElementById('stepsBar').style.display = 'flex';
