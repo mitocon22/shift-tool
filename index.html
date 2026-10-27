@@ -463,9 +463,12 @@
   const today = new Date();
   today.setHours(0,0,0,0);
   // カレンダーは次月から表示
-  calYear = today.getFullYear();
-  calMonth = today.getMonth() + 1;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
+  function resetCalendarMonth() {
+    calYear = today.getFullYear();
+    calMonth = today.getMonth() + 1;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+  }
+  resetCalendarMonth();
 
   /* ---- プリセット管理 ---- */
   function loadPresets() {
@@ -838,6 +841,8 @@
   function resetAll() {
     cart = []; selectedDates = new Set(); offDates = new Set();
     selectedPreset = null;
+    resetCalendarMonth();
+    setMode('off');
     renderPresets();
     document.getElementById('nextBtn1').disabled = true;
     document.getElementById('stepsBar').style.display = 'flex';
