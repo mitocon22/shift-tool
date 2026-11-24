@@ -267,6 +267,7 @@
       cursor: pointer; margin-bottom: 10px; transition: all 0.18s;
     }
     .ics-btn:hover { background: #0062cc; }
+    .ics-btn.added, .ics-btn.added:hover { background: #34c759; }
 
     /* 休みの日コピー */
     .off-copy {
@@ -828,6 +829,9 @@
     const offBtn = document.getElementById('offCopyBtn');
     offBtn.textContent = '📋 コピー';
     offBtn.classList.remove('copied');
+    const icsBtn = document.getElementById('icsBtn');
+    icsBtn.textContent = '📅 カレンダーに追加';
+    icsBtn.classList.remove('added');
     showPage(3);
     updateSteps(3);
     document.getElementById('stepsBar').style.display = 'none';
@@ -967,6 +971,10 @@
     a.download = 'shift.ics';
     a.click();
     URL.revokeObjectURL(url);
+    // 押したことが分かるように表示を変える（もう一度押すこともできる）
+    const btn = document.getElementById('icsBtn');
+    btn.textContent = '✅ 追加済み（もう一度押すと再追加）';
+    btn.classList.add('added');
   }
 
   function dismissBanner() {
