@@ -268,6 +268,22 @@
     }
     .ics-btn:hover { background: #0062cc; }
 
+    /* 休みの日コピー */
+    .off-copy {
+      display: none; align-items: center; gap: 10px; text-align: left;
+      background: #f9f9fb; border: 1.5px solid #e5e5ea; border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 14px;
+    }
+    .off-copy.visible { display: flex; }
+    .off-copy-body { flex: 1; min-width: 0; }
+    .off-copy-label { font-size: 11px; color: #8e8e93; font-weight: 600; margin-bottom: 2px; }
+    .off-copy-text { font-size: 15px; color: #1c1c1e; font-weight: 700; word-break: break-all; }
+    .off-copy-btn {
+      flex-shrink: 0; padding: 9px 14px; background: #e8f0fe; color: #1a56b0;
+      border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .off-copy-btn.copied { background: #34c759; color: white; }
+
     .reset-btn {
       background: #f2f2f7; color: #636366; border: none;
       border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -411,6 +427,13 @@
       <div class="done-sub">内容を確認して、ボタンを押してください。<br>iPhoneのカレンダーに追加できます。</div>
       <div class="copy-box" id="finalText"></div>
       <button class="ics-btn" id="icsBtn" onclick="downloadICS()">📅 カレンダーに追加</button>
+      <div class="off-copy" id="offCopy">
+        <div class="off-copy-body">
+          <div class="off-copy-label">🌴 休みの日</div>
+          <div class="off-copy-text" id="offCopyText"></div>
+        </div>
+        <button class="off-copy-btn" id="offCopyBtn" onclick="copyOffDays()">📋 コピー</button>
+      </div>
       <button class="reset-btn" onclick="resetAll()">🔄 新しいシフトを入力する</button>
     </div>
   </div>
@@ -799,10 +822,49 @@
 
     const text = lines.join('\n');
     document.getElementById('finalText').textContent = text;
+    const offText = formatOffDays();
+    document.getElementById('offCopyText').textContent = offText;
+    document.getElementById('offCopy').classList.toggle('visible', offText !== '');
+    const offBtn = document.getElementById('offCopyBtn');
+    offBtn.textContent = '📋 コピー';
+    offBtn.classList.remove('copied');
     showPage(3);
     updateSteps(3);
     document.getElementById('stepsBar').style.display = 'none';
     document.getElementById('cartBar').classList.remove('visible');
+  }
+
+  // 仕事日が入っている月ごとに、仕事のない日を「11/3.10.17」形式で並べる
+  function formatOffDays() {
+    const workKeys = new Set(finalizedShifts.flatMap(g => g.dates));
+    const months = [...new Set([...workKeys].map(k => k.slice(0, 7)))].sort();
+    return months.map(ym => {
+      const [y, m] = ym.split('-').map(Number);
+      const days = [];
+      const last = new Date(y, m, 0).getDate();
+      for (let d = 1; d <= last; d++) {
+        if (!workKeys.has(dateKey(new Date(y, m - 1, d)))) days.push(d);
+      }
+      return days.length ? `${m}/${days.join('.')}` : '';
+    }).filter(Boolean).join(' ');
+  }
+
+  function copyOffDays() {
+    const text = document.getElementById('offCopyText').textContent;
+    const btn = document.getElementById('offCopyBtn');
+    const done = () => { btn.textContent = '✅ コピー済み'; btn.classList.add('copied'); };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else { fallbackCopy(text, done); }
+  }
+
+  function fallbackCopy(text, callback) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    callback();
   }
 
   function resetAll() {
